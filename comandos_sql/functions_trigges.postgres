@@ -1,0 +1,29 @@
+CREATE OR REPLACE FUNCTION inserir_cliente_google(
+    dados JSONB
+)
+RETURNS VOID AS $$
+DECLARE 
+    id_parcial INTEGER;
+BEGIN
+    INSERT INTO clientes(
+        nome,
+        email,
+        telefone
+    )
+    VALUES(
+        dados->>'nome',
+        dados->>'email',
+        dados->>'telefone'
+    )
+    RETURNING id INTO id_parcial;
+
+    INSERT INTO cliente_google(
+        cliente_id,
+        google_id
+    )
+    VALUES(
+        id_parcial,
+        dados->>'google_id'
+    );
+END;
+$$ LANGUAGE plpgsql;
