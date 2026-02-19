@@ -27,3 +27,61 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION inserir_cliente_email(
+    dados JSONB
+)
+RETURNS VOID AS $$
+DECLARE id_parcial INTEGER;
+BEGIN
+    INSERT INTO clientes(
+        nome,
+        email,
+        telefone
+    )
+    VALUES(
+        dados ->> 'nome',
+        dados ->> 'email',
+        dados ->> 'telefone'
+    )
+    RETURNING id INTO id_parcial;
+    INSERT INTO cliente_email(
+        cliente_id,
+        senha
+    )
+    VALUES(
+        id_parcial,
+        dados ->> 'senha'
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION inserir_barbeiro(
+    dados JSONB
+)
+RETURNS VOID AS $$
+BEGIN
+    INSERT INTO barbeiros(
+        nome,
+        email,
+        telefone,
+        data_nascimento,
+        turno,
+        cpf,
+        percentual_comissao
+    )
+    VALUES(
+        dados ->> 'nome',
+        dados ->> 'email',
+        dados ->> 'telefone',
+        (dados ->> 'data_nascimento')::DATE,
+        (dados ->> 'turno')::HORARIO_ATENDIMENTO,
+        dados ->> 'cpf',
+        COALESCE(
+            (dados ->> 'percentual_comissao')::NUMERIC,
+            20
+        )
+    );
+END;
+$$ LANGUAGE plpgsql;
