@@ -1,0 +1,1 @@
+CREATE OR REPLACE TRIGGE trigge_verifica_agendamento

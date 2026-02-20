@@ -4,8 +4,3 @@ CREATE OR REPLACE TYPE STATUS_AGENDAMENTO AS ENUM(
     'faltou',
     'cancelado'
 );
-CREATE OR REPLACE TYPE HORARIOS_ATENDIMENTO AS ENUM(
-    'manha',
-    'tarde',
-    'noite'
-);

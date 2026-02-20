@@ -1,10 +1,7 @@
 -- tipos Enum utilizados por
 -- 1. status de agendamento;
 
--- 2. horarios de atendimento dos barbeiros;
-
 --STATUS_AGENDAMENTO
---HORARIO_ATENDIMENTO
 
 CREATE TABLE IF NOT EXISTS clientes(
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -45,11 +42,17 @@ CREATE TABLE IF NOT EXISTS barbeiros(
         CHECK (data_nascimento <= CURRENT_DATE),
     data_criacao TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     ativo BOOLEAN DEFAULT TRUE,
-    turno HORARIO_ATENDIMENTO NOT NULL,
     cpf VARCHAR(11) NOT NULL UNIQUE,
     percentual_comissao NUMERIC(5,2) NOT NULL 
         CHECK (percentual_comissao BETWEEN 0 AND 100)
         DEFAULT 20
+);
+
+CREATE TABLE IF NOT EXISTS dias_de_folga_barbeiro(
+    barbeiro_id INT NOT NULL PRIMARY KEY,
+    dia_de_folga date WITH DATE ZONE NOT NULL,
+    CONSTRAINT FOREIGN KEY(barbeiro_id)
+        REFERENCES barbeiros(id)
 );
 
 
