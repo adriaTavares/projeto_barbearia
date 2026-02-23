@@ -122,48 +122,44 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION criar_agendamento(
     n_cliente_id INTEGER,
     n_barbeiro_id INTEGER,
-    n_data_agendamento TIMESTAMP,
-    n_valor_total NUMERIC,
-    n_servicos INT[]
+    n_servico_id INTEGER,
+    n_data_agendamento TIMESTAMP WITH TIME ZONE
 )
 RETURNS INTEGER AS $$
 DECLARE
     id_parcial INTEGER;
-    valor_total_parcial NUMERIC
+    n_valor_total NUMERIC(10,2);
 BEGIN
+
+    SELECT valor_base
+    INTO n_valor_total
+    FROM servicos
+    WHERE id = n_servico_id;
+
+    IF n_valor_total IS NULL THEN
+        RAISE EXCEPTION 'Serviço não encontrado';
+    END IF;
+
     INSERT INTO agendamentos(
         cliente_id,
         barbeiro_id,
+        servico_id,
+        valor_total,
         data_agendamento
     )
     VALUES(
         n_cliente_id,
         n_barbeiro_id,
+        n_servico_id,
+        n_valor_total,
         n_data_agendamento
     )
     RETURNING id INTO id_parcial;
 
-
-    INSERT INTO agendamento_servico(
-        agendamento_id,
-        servico_id
-    )
-        SELECT id_parcial, id
-        FROM servicos
-        WHERE id = ANY(n_servicos);
-
-    SELECT SUM(valor_base)
-    INTO valor_total_parcial
-    FROM servicos
-    WHERE id = ANY(n_servicos);
-
-    UPDATE agendamentos
-    SET valor_total = valor_total_parcial
-    WHERE id = id_parcial;
     RETURN id_parcial;
+
 END;
 $$ LANGUAGE plpgsql;
-
 
 
 
