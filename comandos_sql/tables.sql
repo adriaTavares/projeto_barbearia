@@ -3,46 +3,6 @@ CREATE OR REPLACE TYPE STATUS_AGENDAMENTO AS ENUM(
     'finalizado',
     'cancelado'
 );
-CREATE OR REPLACE TYPE TIPO_PROVEDOR_OAUTH AS ENUM (
-    'google',
-    'github'
-);
-CREATE TABLE IF NOT EXISTS clientes(
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    nome VARCHAR(255),
-    email_principal TEXT NOT NULL UNIQUE,
-    email_verified BOOLEAN DEFAULT FALSE,
-    data_criacao TIMESTAMP NOT NULL DEFAULT NOW(),
-    data_atualizacao TIMESTAMP NOT NULL DEFAULT NOW(),
-    ativo BOOLEAN DEFAULT TRUE,
-    codigo_verificacao VARCHAR(10)
-);
-
-CREATE TABLE IF NOT EXISTS credenciais_email(
-    cliente_id UUID PRIMARY KEY NOT NULL,
-    senha TEXT NOT NULL,
-    CONSTRAINT credenciais_email_clientes_id_fk
-        FOREIGN KEY(cliente_id)
-        REFERENCES clientes(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS credenciais_oauth(
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    cliente_id UUID NOT NUll,
-    provedor TIPO_PROVEDOR_OAUTH NOT NULL,
-    provedor_user_id TEXT NOT NULL,
-    email_oauth TEXT,
-    CONSTRAINT credenciais_oauth_clientes_id_fk
-        FOREIGN KEY(cliente_id)
-        REFERENCES clientes(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    UNIQUE(provedor,provedor_user_id)
-);
-
-
 
 CREATE TABLE IF NOT EXISTS servicos(
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
