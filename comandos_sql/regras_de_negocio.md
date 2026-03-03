@@ -1,127 +1,176 @@
-# 📘 Documento de Regras de Negócio – Sistema de Barbearia
+# 📄 Sistema de Gerenciamento para Barbearia
 
-## 1. Objetivo do Sistema
+A barbearia deseja um sistema completo para gerenciamento de usuários, autenticação, serviços e agendamentos, com controle de permissões e integridade de dados.
 
-O sistema tem como objetivo controlar o fluxo de agendamentos de uma barbearia, garantindo organização, controle operacional e aplicação automática das regras de negócio.
-
-O sistema deve assegurar:
-
-- Organização dos horários
-- Controle operacional por cliente e barbeiro
-- Prevenção de conflitos de horário
-- Cumprimento dos limites estabelecidos
+O sistema foi modelado com separação de papéis de usuário e autenticação híbrida (email/senha + OAuth).
 
 ---
 
-# 2. Entidades do Sistema
+# 👥 1. Usuários
 
-O sistema gerencia quatro entidades principais:
+Todos os usuários do sistema ficam na tabela `usuarios`.
 
-- Clientes
-- Barbeiros
-- Serviços
-- Agendamentos
+## Estrutura Base
 
----
+- id (UUID)
+- nome
+- email_principal (único)
+- email_verificado
+- ativo
+- tipo_usuario_id
+- data_criacao
+- data_atualizacao
 
-# 3. Informações Armazenadas
+## Tipos de Usuário
 
-## 3.1 Clientes
+Tabela: `tipos_usuarios`
 
-Para cada cliente, o sistema deve armazenar:
+Tipos existentes:
 
-- Nome completo
-- Data de criação do cadastro
-- Telefone
-- E-mail
-- Situação (ativo ou inativo)
-- Tipo de autenticação (Google ou cadastro tradicional)
+- cliente
+- barbeiro
+- admin
+- master
 
----
+### 📌 Regras
 
-## 3.2 Barbeiros
-
-Para cada barbeiro, o sistema deve armazenar:
-
-- Nome completo
-- Data de criação do cadastro
-- Telefone
-- E-mail
-- CPF
-- Percentual de comissão
-- Data de nascimento
-- Situação (ativo ou inativo)
-- Dias de folga
+- Email principal deve ser único.
+- Usuário pode estar ativo ou inativo.
+- Todo usuário possui um tipo.
+- Atualização de usuário atualiza automaticamente `data_atualizacao` via trigger.
 
 ---
 
-## 3.3 Serviços
+# ✂️ 2. Barbeiros
 
-Para cada serviço disponibilizado, o sistema deve armazenar:
+Barbeiro é uma especialização de usuário.
 
-- Nome do serviço
-- Valor base
-- Tempo estimado em minutos
-- Situação (ativo ou inativo)
+Tabela: `barbeiros`
 
-Cada agendamento possui apenas **um serviço associado**.
+- usuario_id (PK e FK para usuarios)
+- telefone (único)
+- data_nascimento
+- cpf (único)
+- percentual_comissao (0 a 100)
 
----
+## 📌 Regras
 
-## 3.4 Agendamentos
-
-Para cada agendamento, o sistema deve armazenar:
-
-- Cliente responsável
-- Barbeiro responsável
-- Serviço escolhido
-- Data e horário do atendimento
-- Data de criação
-- Valor total
-- Status atual
-
-### Status possíveis:
-
-- Agendado
-- Finalizado
-- Cancelado
+- Só usuários do tipo "barbeiro" devem existir nessa tabela.
+- Exclusão do usuário remove automaticamente o barbeiro (ON DELETE CASCADE).
+- Comissão deve estar entre 0 e 100.
+- Data de nascimento não pode ser futura.
 
 ---
 
-# 4. Regras de Negócio
+# 🗓 3. Dias de Folga
 
-## 4.1 Regras para Clientes
+Tabela: `dias_de_folga_barbeiro`
 
-1. Um cliente pode possuir no máximo **3 agendamentos futuros ativos**.
-2. Um agendamento deve ser feito com no mínimo **1 dia de antecedência**.
-3. Não é permitido criar agendamentos no passado.
-4. O cliente pode cancelar um agendamento até **2 horas antes do horário marcado**.
-5. Apenas clientes ativos podem criar agendamentos.
+- barbeiro_id
+- dia_de_folga
 
----
+## 📌 Regras
 
-## 4.2 Regras para Barbeiros
-
-1. Cada barbeiro pode ter no máximo **15 agendamentos por dia**.
-2. O barbeiro pode cancelar um agendamento até **2 horas antes do horário marcado**.
-3. Não é permitido agendar atendimento em dias de folga.
-4. Apenas barbeiros ativos podem receber agendamentos.
+- Não pode haver duplicidade de folga no mesmo dia.
+- Ao excluir barbeiro, remove suas folgas automaticamente.
 
 ---
 
-## 4.3 Regras de Horário
+# 🔐 4. Autenticação
 
-1. Não pode haver dois agendamentos no mesmo horário para o mesmo barbeiro.
-2. Deve existir um intervalo mínimo de **10 minutos entre agendamentos consecutivos**.
-3. Não pode haver sobreposição considerando o tempo do serviço.
-4. O sistema deve impedir agendamentos fora do horário de funcionamento da barbearia.
+O sistema suporta:
+
+## 4.1 Email e Senha
+
+Tabela: `credenciais_email`
+
+- usuario_id
+- senha_hash
+
+## 4.2 OAuth
+
+Tabela: `provedores_oauth`
+- google
+- github
+- facebook
+- linkedin
+
+Tabela: `credenciais_oauth`
+- usuario_id
+- provedor_id
+- provedor_user_id
+
+## 4.3 Verificação de Email
+
+Tabela: `verificacoes_email`
+
+- usuario_id
+- codigo_hash
+- senha_hash
+- expira_em
+- usado
 
 ---
 
-# 5. Regras Gerais
+# 💈 5. Serviços
 
-1. O valor total do agendamento deve corresponder ao valor base do serviço.
-2. O status deve seguir fluxo lógico (ex: não pode finalizar algo cancelado).
-3. O sistema deve garantir integridade referencial entre todas as entidades.
+Tabela: `servicos`
+
+- id
+- nome (único)
+- descricao
+- preco
+- tempo_minutos
+- ativo
+
+## 📌 Regras
+
+- Preço ≥ 0
+- Tempo > 0
+- Serviço inativo não pode ser usado em novos agendamentos.
 
 ---
+
+# 📅 6. Agendamentos
+
+Tabela: `agendamentos`
+
+- id
+- cliente_id (usuario)
+- barbeiro_id
+- data_criacao
+- data_agendada
+- data_fim
+- valor_total
+- tempo_total
+- status_id
+
+## Status possíveis
+
+Tabela: `status_agendamento`
+
+- agendado
+- finalizado
+- cancelado
+- faltou
+
+---
+
+## 📌 Regras de Agendamento
+
+### 🔹 Horário de Funcionamento
+
+- Segunda a sábado
+- 07:00 às 12:00
+- 14:00 às 20:00
+- Não pode domingo
+- Não pode no passado
+
+---
+
+### 🔹 Integridade Temporal
+
+- `data_fim` deve ser maior que `data_agendada`
+- Tempo_total deve corresponder à soma dos serviços
+- Valor_total deve corresponder à soma dos serviços
+
