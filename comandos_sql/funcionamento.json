@@ -1,0 +1,66 @@
+{
+    "roles": [
+        {
+            "id": 1,
+            "nivel": "cliente"
+        },
+        {
+            "id": 2,
+            "nivel": "funcionario"
+        },
+        {
+            "id": 4,
+            "nivel": "administrador"
+        },
+        {
+            "id": 5,
+            "nivel": "master"
+        }
+    ],
+    "usuarios": [
+        {
+            "id": 1,
+            "nome": "João Silva",
+            "telefone": "99999-9999",
+            "email": "joao@email.com",
+            "email_verificado": true,
+            "tipo": 1,
+            "ativo": true,
+            "data_criacao": "2026-03-08T19:44:29"
+        },
+        {
+            "id": 2,
+            "nome": "Carlos Barbeiro",
+            "telefone": "98888-8888",
+            "email": "carlos@barbearia.com",
+            "email_verificado": true,
+            "tipo": 2,
+            "ativo": true,
+            "data_criacao": "2025-03-08T12:44:29",
+            "data_atualizacao": "2025-03-08T12:44:29"
+        }
+    ],
+
+    "servicos": [
+        {
+            "id": 1,
+            "nome": "Corte de cabelo",
+            "duracao_minutos": 30,
+            "preco": 35.0
+        }
+    ],
+
+    "agendamentos": [
+        {
+            "id": 1,
+            "data_criacao": "2026-03-8T09:00:00",
+            "data_agendada": "2026-03-10T08:00:00",
+            "status": "confirmado",
+            "cliente_id": 1,
+            "barbeiro_id": 2,
+            "valor_total": 35.0,
+            "tempo_total_minutos": 30,
+            "servicos": [1]
+        }
+    ]
+}
